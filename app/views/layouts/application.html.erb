@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Billtastic</title>
+  <%= stylesheet_link_tag    "application", media: "all", "data-turbolinks-track" => true %>
+  <%= javascript_include_tag "application", "data-turbolinks-track" => true %>
+  <%= csrf_meta_tags %>
+</head>
+<body>
+  <section id="sign-in">
+    <% if user_signed_in? %>
+        Signed in as <strong><%= current_user.email %></strong>.
+      <%= link_to 'Edit profile', edit_user_registration_path %> |
+      <%= link_to "Sign out", destroy_user_session_path, method: :delete %>
+    <% else %>
+      <%= link_to "Sign up", new_user_registration_path %> |
+      <%= link_to "Sign in", new_user_session_path %> |
+      <ipp:login href="<%= user_omniauth_authorize_path(:intuit) %>"></ipp:login>
+    <% end %>
+  </section>
+  <!-- ipp:connectToIntuit is the Intuit Connect button -->
+  <% unless session[:token] %>
+    <ipp:connectToIntuit></ipp:connectToIntuit>
+  <% else %>
+    <div>
+      <%= link_to 'Disconnect from QuickBooks', disconnect_quickbooks_path, data: { confirm: 'Are you sure you want to disconnect?' } %>
+    </div>
+  <% end %>
+
+  <% if notice %>
+    <div style="padding: 10px;background: gainsboro;font-weight: 900;width: 50%;"><%= notice %></div>
+  <% end %>
+
+  <%= yield %>
+
+  <script type="text/javascript" src="https://appcenter.intuit.com/Content/IA/intuit.ipp.anywhere.js"></script>
+  <!-- configure the Intuit object: 'grantUrl' is a URL in your application which kicks off the flow, see below -->
+  <script>
+      intuit.ipp.anywhere.setup({menuProxy: '/path/to/blue-dot', grantUrl: '<%= authenticate_quickbooks_url %>'});
+  <% if user_signed_in? && !session[:token] %>
+      intuit.ipp.anywhere.directConnectToIntuit();
+  <% end %>
+  </script>
+</body>
+</html>
